@@ -95,7 +95,7 @@
 <body>
     <div class="container">
         <div class="title">Task Performed -- Weekly</div>
-        <input type="file" id="fileInput" accept=".txt">
+        <input type="file" id="fileInput" accept="*/*">
         <div id="taskContainer" class="task-container hidden">
             <h3>Work Done This Week</h3>
             <p id="taskContent" class="task-content"></p>
@@ -108,13 +108,34 @@
     <script>
         document.getElementById('fileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
+            const fileType = file.type;
+            const fileName = file.name;
+            const reader = new FileReader();
+
+            if (fileType.startsWith('text')) {
+                // Handle text files
                 reader.onload = function(e) {
                     document.getElementById('taskContent').textContent = e.target.result;
                     document.getElementById('taskContainer').classList.remove('hidden');
                 };
                 reader.readAsText(file);
+            } else if (fileType.startsWith('image')) {
+                // Handle image files
+                const imageURL = URL.createObjectURL(file);
+                document.getElementById('taskContent').textContent = `Image file: ${fileName}`;
+                const img = document.createElement('img');
+                img.src = imageURL;
+                img.style.maxWidth = '100%';
+                document.getElementById('taskContent').appendChild(img);
+                document.getElementById('taskContainer').classList.remove('hidden');
+            } else if (fileType === 'application/pdf') {
+                // Handle PDF files
+                document.getElementById('taskContent').textContent = `PDF file: ${fileName}. Unable to display content directly.`;
+                document.getElementById('taskContainer').classList.remove('hidden');
+            } else {
+                // Handle unsupported file types
+                document.getElementById('taskContent').textContent = `File type not supported for preview: ${fileType}`;
+                document.getElementById('taskContainer').classList.remove('hidden');
             }
         });
 
