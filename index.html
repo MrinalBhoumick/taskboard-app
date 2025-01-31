@@ -105,6 +105,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.2"></script>
     <script>
         document.getElementById('fileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -113,21 +114,28 @@
             const reader = new FileReader();
 
             if (fileType.startsWith('text')) {
-                // Handle text files
                 reader.onload = function(e) {
                     document.getElementById('taskContent').textContent = e.target.result;
                     document.getElementById('taskContainer').classList.remove('hidden');
                 };
                 reader.readAsText(file);
             } else if (fileType.startsWith('image')) {
-                // Handle image files
                 const imageURL = URL.createObjectURL(file);
-                document.getElementById('taskContent').textContent = `Image file: ${fileName}`;
-                const img = document.createElement('img');
-                img.src = imageURL;
-                img.style.maxWidth = '100%';
-                document.getElementById('taskContent').appendChild(img);
-                document.getElementById('taskContainer').classList.remove('hidden');
+                document.getElementById('taskContent').textContent = `Extracting text from image: ${fileName}...`;
+
+                Tesseract.recognize(
+                    imageURL,
+                    'eng',
+                    {
+                        logger: (m) => console.log(m)
+                    }
+                ).then(({ data: { text } }) => {
+                    document.getElementById('taskContent').textContent = text || 'No text found in the image.';
+                    document.getElementById('taskContainer').classList.remove('hidden');
+                }).catch(error => {
+                    document.getElementById('taskContent').textContent = `Error extracting text from image: ${error.message}`;
+                    document.getElementById('taskContainer').classList.remove('hidden');
+                });
             } else if (fileType === 'application/pdf') {
                 // Handle PDF files
                 document.getElementById('taskContent').textContent = `PDF file: ${fileName}. Unable to display content directly.`;
